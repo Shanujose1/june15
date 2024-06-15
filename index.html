@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: black;
+        }
+        .btns {
+            background-color: black;
+            color: white;
+            border: 1px solid white;
+            padding: 5px;
+            margin-right: 5px;
+        }
+        .bt1{
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        #div1 {
+            margin-top: 50px;
+            margin-left: 70px;
+        }
+        #search {
+            width: 61%;
+        }
+        .cells {
+            color: white;
+            padding: 15px;
+            text-align: center;
+            
+        }
+        table {
+            margin-left: 6%;
+            border: 2px solid black;
+            border-collapse: collapse;
+            width: 85%; 
+            table-layout: fixed;
+        }
+        .headrow {
+            border-bottom: 2px solid white;
+        
+        }
+        img{
+            margin-right: 10px;
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <div id="div1">
+        <input class="btns" id="search" placeholder="Search By Name or Symbol" type="text">
+        <button class="btns bt1" id="btn1">Sort By Mkt Cap</button>
+        <button class="btns bt1" id="btn2">Sort By Percentage</button>
+    </div>
+    <div id="tableA"></div>
+
+    <script>
+        const fetchdata = fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false');
+                            
+        
+        let storing;
+        let storing1; 
+
+        fetchdata.then((data) => data.json())
+                 .then((data) =>{
+                    console.log(data)
+                    storing=data;
+                    storing1 = data;
+                    renderdata(data)});
+
+let samp;
+
+
+        function renderdata(data) {
+        samp = data;
+        const tabcon = document.getElementById('tableA');
+        let tabl = document.createElement('table');
+        tabl.id = "tablll"
+        const head = tabl.createTHead();
+        head.id = "headings";
+        const body = tabl.createTBody();
+        body.id = "bodysss";
+
+            data.forEach(element => {
+                const headrow = body.insertRow(-1);
+                headrow.className = 'headrow';
+                let headingOfTable = ["image", "symbol", "current_price", "total_volume","price_change_percentage_24h","market_cap"];
+                let count = 1;
+
+                headingOfTable.forEach((heading) => {
+                    const cell = headrow.insertCell(-1);
+                    cell.className = "cells";
+                    cell.id = "cells" + count++;
+                    if (heading === "image") {
+                        const img = document.createElement('img');
+                        img.src = element[heading];
+                        img.width = 25; // Set image width
+                        img.height = 25; // Set image height
+
+                        const name = document.createElement('span')
+                        name.innerText = element['name']
+                        
+
+                        img.alt = element['name'];
+                        cell.appendChild(img);
+                        cell.append(name);       
+                    } 
+                    else if(heading==="symbol"){
+                        cell.innerText = element[heading].toUpperCase()
+                    }
+                        
+                    else if (heading === "current_price" || heading === "total_volume") {
+                        cell.innerText = "$" + element[heading];
+                    } 
+                    else if(heading==="price_change_percentage_24h"){
+                        let number = element[heading];
+                        let formatNumber =  number.toFixed(2);
+                        if(formatNumber>0){
+                            cell.innerText = formatNumber + "%";
+                            cell.style.color = "greenyellow"
+                        }
+                        else{
+                            cell.innerText = formatNumber + "%";
+                            cell.style.color = "red"
+                        }
+                        
+                        
+                    }
+                    else if(heading==="market_cap"){
+                        cell.innerText = `Mkt Cap : $${element[heading]}`
+                    }
+                    else {
+                        cell.innerText = element[heading];
+                    }
+                });
+            });
+            tabcon.append(tabl);
+        }
+
+
+
+        const searchb = document.getElementById('search');
+        searchb.addEventListener('input',()=>{
+            // console.log(searchb.value)
+            let arr = [];
+            let values = searchb.value;
+            if(values){
+                    for(let i =0; i<storing.length;i++){
+                        if(storing[i].name.includes(values) || storing[i].symbol.toUpperCase().includes(values) ){
+                            arr.push(storing[i]);
+                        }
+                    }
+            
+                    if(arr.length>0){
+                        const body = document.getElementById('bodysss');
+                            if(body){
+                                body.remove();
+                            }           
+                            renderdata(arr)
+                    }   
+                    else{
+                        const body = document.getElementById('bodysss');
+                            if(body){
+                                body.remove();
+                            }
+                            renderdata(storing);
+                        }
+            }
+            else {
+                const body = document.getElementById('bodysss');
+                if(body){
+                    body.remove();
+                }
+                renderdata(storing);
+            }
+
+        })
+
+//                                      SORT BY MKT CAP
+
+
+        const sortMkt = document.getElementById('btn1');
+        let count = 0;
+        sortMkt.addEventListener('click',()=>{
+            count++;
+            if(count%2!=0){
+                let sample = [...storing];
+                const body = document.getElementById('bodysss');
+                if(body){
+                    body.remove();
+                }
+                sortMkt.style.backgroundColor = "white";
+                sortMkt.style.color = "red"
+                sample.sort((a,b)=>a.market_cap  -  b.market_cap);
+                renderdata(sample)
+            }
+            else if(count%2==0){
+            sortMkt.style.backgroundColor = "black";
+            sortMkt.style.color = "white";
+            const body = document.getElementById('bodysss');
+                if(body){
+                    body.remove();
+                }
+                renderdata(storing);
+            }
+            
+        })
+
+//                                         SORT BY PERCENTAGE
+
+        const sortPer = document.getElementById('btn2');
+        let count1 = 0;
+        sortPer.addEventListener('click',()=>{
+            count1++;
+            if(count1%2!=0){
+                let sample1 = [...storing];
+                const body = document.getElementById('bodysss');
+                if(body){
+                    body.remove();
+                }
+                sortPer.style.backgroundColor = "white";
+                sortPer.style.color = "red"
+                sample1.sort((a,b)=>a.price_change_percentage_24h  -  b.price_change_percentage_24h);
+                renderdata(sample1)
+            }
+            else if(count%2==0){
+            sortPer.style.backgroundColor = "black";
+            sortPer.style.color = "white";
+            const body = document.getElementById('bodysss');
+                if(body){
+                    body.remove();
+                }
+                renderdata(storing);
+            }
+            
+        })
+
+
+    </script>
+</body>
+</html>
